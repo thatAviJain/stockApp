@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
 import AddProductForm from "./components/AddProductForm";
