@@ -1,35 +1,50 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import { useEffect, useState } from "react";
+import { supabase } from "./supabase";
+import AddProductForm from "./components/AddProductForm";
+import InventoryList from "./components/InventoryList";
+import EditProductModal from "./components/EditProductModal";
 
 function App() {
-  const [count, setCount] = useState(0)
+	const [products, setProducts] = useState([]);
+	const [editingProduct, setEditingProduct] = useState(null);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+	async function fetchProducts() {
+		const { data, error } = await supabase.from("products").select("*");
+		if (error) console.error("Fetch error:", error);
+		else setProducts(data);
+	}
+
+	useEffect(() => {
+		fetchProducts();
+	}, []);
+
+	const handleDelete = async (id) => {
+		const { error } = await supabase.from("products").delete().eq("id", id);
+		if (error) console.error("Delete error:", error);
+		else fetchProducts();
+	};
+
+	return (
+		<div className="p-6 max-w-4xl mx-auto">
+			<h1 className="text-2xl font-bold mb-4">
+				🪨 Marble & Tile Inventory
+			</h1>
+			<AddProductForm onAdd={fetchProducts} />
+			<InventoryList
+				products={products}
+				onDelete={handleDelete}
+				onEdit={(p) => setEditingProduct(p)}
+			/>
+			{editingProduct && (
+				<EditProductModal
+					product={editingProduct}
+					onClose={() => setEditingProduct(null)}
+					onUpdate={fetchProducts}
+				/>
+			)}
+		</div>
+	);
 }
 
-export default App
+export default App;
